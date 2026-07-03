@@ -1,5 +1,9 @@
+var API_BASE = window.location.origin;
+if (window.Capacitor && window.Capacitor.isNative) {
+  API_BASE = 'https://kidzventure1.onrender.com';
+}
 const API = {
-  baseUrl: window.location.origin + '/api',
+  baseUrl: API_BASE + '/api',
 
   async request(method, path, data = null, isFormData = false) {
     const url = this.baseUrl + path;
