@@ -1,0 +1,12 @@
+node_modules/
+__pycache__/
+*.pyc
+.env
+android/
+.idea/
+*.db
+*.db-journal
+dist/
+build/
+*.log
+.DS_Store

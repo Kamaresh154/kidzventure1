@@ -1,0 +1,19 @@
+{
+  "name": "kidzventure-erp",
+  "version": "2.0.0",
+  "description": "KidzVenture ERP - Mobile Business Management",
+  "private": true,
+  "scripts": {
+    "start": "cd backend && python app.py",
+    "install:deps": "pip install -r backend/requirements.txt",
+    "build:mobile": "npx cap sync android && npx cap copy android",
+    "build:apk": "cd android && ./gradlew assembleDebug",
+    "cap:init": "npx cap init KidzVentureERP com.kidzventure.erp",
+    "cap:add:android": "npx cap add android"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/android": "^6.0.0"
+  }
+}
