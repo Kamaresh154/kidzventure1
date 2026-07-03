@@ -31,7 +31,7 @@
   <script src="js/app.js"></script>
 
   <script>
-    if ('serviceWorker' in navigator) {
+    if ('serviceWorker' in navigator && window.location.protocol !== 'file:' && window.location.protocol !== 'capacitor:') {
       navigator.serviceWorker.register('service-worker.js');
     }
   </script>

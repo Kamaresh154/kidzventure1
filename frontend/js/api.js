@@ -1,8 +1,10 @@
 var API_BASE = window.location.origin;
-if (window.location.protocol === 'file:' || window.location.protocol === 'capacitor:') {
+var isNative = window.location.protocol === 'file:' || window.location.protocol === 'capacitor:' || window.location.origin === 'null';
+if (navigator && navigator.userAgent && navigator.userAgent.indexOf('Capacitor') !== -1) isNative = true;
+if (isNative) {
   API_BASE = 'https://kidzventure1.onrender.com';
 }
-console.log('API base URL:', API_BASE);
+console.log('API: isNative=' + isNative + ' origin=' + window.location.origin + ' base=' + API_BASE);
 
 const API = {
   baseUrl: API_BASE + '/api',
@@ -19,7 +21,13 @@ const API = {
       opts.body = isFormData ? data : JSON.stringify(data);
     }
 
+    if (typeof AbortController !== 'undefined') {
+      var controller = new AbortController();
+      var timeout = setTimeout(function() { controller.abort(); }, 60000);
+      opts.signal = controller.signal;
+    }
     const res = await fetch(url, opts);
+    if (typeof AbortController !== 'undefined') clearTimeout(timeout);
     const contentType = res.headers.get('content-type') || '';
     if (!contentType.includes('application/json')) {
       const text = await res.text();
