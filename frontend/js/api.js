@@ -1,10 +1,15 @@
 var API_BASE = window.location.origin;
-var isNative = window.location.protocol === 'file:' || window.location.protocol === 'capacitor:' || window.location.origin === 'null';
-if (navigator && navigator.userAgent && navigator.userAgent.indexOf('Capacitor') !== -1) isNative = true;
-if (isNative) {
+var hostname = window.location.hostname;
+// Capacitor serves from https://localhost with androidScheme:"https"
+// Detect: served from localhost but NOT local dev (port 5000 or http)
+var isCapacitor = hostname === 'localhost' && (window.location.protocol === 'https:' || window.location.port === '');
+if (window.location.protocol !== 'http:' && window.location.protocol !== 'https:') isCapacitor = true;
+if (window.location.origin === 'null') isCapacitor = true;
+if (navigator && navigator.userAgent && navigator.userAgent.indexOf('Capacitor') !== -1) isCapacitor = true;
+if (isCapacitor) {
   API_BASE = 'https://kidzventure1.onrender.com';
 }
-console.log('API: isNative=' + isNative + ' origin=' + window.location.origin + ' base=' + API_BASE);
+console.log('API: isCapacitor=' + isCapacitor + ' hostname=' + hostname + ' protocol=' + window.location.protocol + ' base=' + API_BASE);
 
 const API = {
   baseUrl: API_BASE + '/api',
