@@ -26,13 +26,7 @@ const API = {
       opts.body = isFormData ? data : JSON.stringify(data);
     }
 
-    if (typeof AbortController !== 'undefined') {
-      var controller = new AbortController();
-      var timeout = setTimeout(function() { controller.abort(); }, 60000);
-      opts.signal = controller.signal;
-    }
     const res = await fetch(url, opts);
-    if (typeof AbortController !== 'undefined') clearTimeout(timeout);
     const contentType = res.headers.get('content-type') || '';
     if (!contentType.includes('application/json')) {
       const text = await res.text();
