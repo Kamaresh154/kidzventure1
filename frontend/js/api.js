@@ -1,5 +1,5 @@
 var API_BASE = window.location.origin;
-if (window.Capacitor && window.Capacitor.isNative) {
+if (window.location.protocol === 'file:' || window.location.protocol === 'capacitor:') {
   API_BASE = 'https://kidzventure1.onrender.com';
 }
 const API = {
