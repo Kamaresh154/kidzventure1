@@ -61,7 +61,7 @@ def create_app():
     # Health check
     @app.route('/api/health')
     def health():
-        return jsonify({'status': 'ok', 'version': '2.0.0'})
+        return jsonify({'status': 'ok', 'version': '2.0.0', 'message': 'KidzVenture ERP API'})
 
     # Serve frontend
     @app.route('/', defaults={'path': ''})
