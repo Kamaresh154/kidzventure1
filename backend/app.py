@@ -16,7 +16,7 @@ def create_app():
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(seconds=Config.JWT_ACCESS_TOKEN_EXPIRES)
     app.config['MONGO_URI'] = Config.MONGO_URI
 
-    CORS(app)
+    CORS(app, origins=lambda origin: origin)
     jwt.init_app(app)
     mongo.init_app(app)
 
