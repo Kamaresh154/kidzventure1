@@ -53,7 +53,7 @@ def check_in():
         'check_in': now,
         'check_out': '',
         'status': 'present',
-        'notes': request.get_json().get('notes', '') if request.get_json() else '',
+        'notes': (request.get_json(silent=True) or {}).get('notes', ''),
         'created_at': datetime.utcnow(),
         'updated_at': datetime.utcnow(),
     }

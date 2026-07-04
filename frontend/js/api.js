@@ -81,7 +81,32 @@ function formatCurrency(n) {
   return '₹' + Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
 }
 
-function downloadBlob(blob, filename) {
+async function downloadBlob(blob, filename) {
+  if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Filesystem) {
+    try {
+      const reader = new FileReader();
+      const b64 = await new Promise((resolve, reject) => {
+        reader.onloadend = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+      const saved = await Capacitor.Plugins.Filesystem.writeFile({
+        path: filename,
+        data: b64,
+        directory: 'Cache',
+      });
+      await Capacitor.Plugins.Share.share({
+        title: filename,
+        text: 'Exported file',
+        url: saved.uri,
+        dialogTitle: 'Save or share ' + filename,
+      });
+      showToast('Exported successfully');
+    } catch (e) {
+      showToast('Export failed: ' + e.message, 'error');
+    }
+    return;
+  }
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
