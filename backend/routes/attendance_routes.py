@@ -1,6 +1,6 @@
 from datetime import datetime, date
 from flask import Blueprint, request, jsonify, current_app
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt
 from utils.helpers import admin_required, employee_or_admin, serialize_doc, serialize_list
 from bson.objectid import ObjectId
 
@@ -10,12 +10,12 @@ attendance_bp = Blueprint('attendance', __name__)
 @attendance_bp.route('', methods=['GET'])
 @jwt_required()
 def get_attendance():
-    current_user = get_jwt_identity()
+    current_user = get_jwt()
     db = current_app.config['db']
 
     query = {}
     if current_user['role'] == 'employee':
-        query['user_id'] = current_user['id']
+        query['user_id'] = current_user['sub']
 
     date_from = request.args.get('from', '')
     date_to = request.args.get('to', '')
@@ -33,12 +33,12 @@ def get_attendance():
 @attendance_bp.route('/check-in', methods=['POST'])
 @employee_or_admin
 def check_in():
-    current_user = get_jwt_identity()
+    current_user = get_jwt()
     db = current_app.config['db']
     today = date.today().isoformat()
 
     existing = db.attendance.find_one({
-        'user_id': current_user['id'],
+        'user_id': current_user['sub'],
         'date': today,
     })
 
@@ -47,7 +47,7 @@ def check_in():
 
     now = datetime.utcnow().strftime('%H:%M:%S')
     record = {
-        'user_id': current_user['id'],
+        'user_id': current_user['sub'],
         'user_name': current_user['full_name'],
         'date': today,
         'check_in': now,
@@ -71,12 +71,12 @@ def check_in():
 @attendance_bp.route('/check-out', methods=['POST'])
 @employee_or_admin
 def check_out():
-    current_user = get_jwt_identity()
+    current_user = get_jwt()
     db = current_app.config['db']
     today = date.today().isoformat()
 
     existing = db.attendance.find_one({
-        'user_id': current_user['id'],
+        'user_id': current_user['sub'],
         'date': today,
     })
 
@@ -98,12 +98,12 @@ def check_out():
 @attendance_bp.route('/today', methods=['GET'])
 @jwt_required()
 def get_today_status():
-    current_user = get_jwt_identity()
+    current_user = get_jwt()
     db = current_app.config['db']
     today = date.today().isoformat()
 
     record = db.attendance.find_one({
-        'user_id': current_user['id'],
+        'user_id': current_user['sub'],
         'date': today,
     })
 

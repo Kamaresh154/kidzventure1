@@ -1,6 +1,6 @@
 from datetime import datetime
 from flask import Blueprint, request, jsonify, current_app
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt
 from utils.helpers import admin_required
 from bson.objectid import ObjectId
 import bcrypt
@@ -11,14 +11,14 @@ employees_bp = Blueprint('employees', __name__)
 @employees_bp.route('', methods=['GET'])
 @jwt_required()
 def get_employees():
-    current_user = get_jwt_identity()
+    current_user = get_jwt()
     db = current_app.config['db']
 
     if current_user['role'] == 'admin':
         employees = list(db.users.find({'role': 'employee'}, {'password_hash': 0}))
     else:
         employees = list(db.users.find(
-            {'role': 'employee', '_id': current_user['id']},
+            {'role': 'employee', '_id': current_user['sub']},
             {'password_hash': 0}
         ))
 

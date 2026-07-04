@@ -1,6 +1,6 @@
 from datetime import datetime, date
 from flask import Blueprint, request, jsonify, current_app, send_file
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt
 from utils.helpers import admin_required, employee_or_admin, serialize_doc, serialize_list
 from bson.objectid import ObjectId
 import io
@@ -27,7 +27,7 @@ invoices_bp = Blueprint('invoices', __name__)
 @invoices_bp.route('', methods=['GET'])
 @jwt_required()
 def get_invoices():
-    current_user = get_jwt_identity()
+    current_user = get_jwt()
     db = current_app.config['db']
 
     page = int(request.args.get('page', 1))
@@ -63,7 +63,7 @@ def get_invoices():
 @invoices_bp.route('', methods=['POST'])
 @employee_or_admin
 def create_invoice():
-    current_user = get_jwt_identity()
+    current_user = get_jwt()
     data = request.get_json()
     db = current_app.config['db']
 
@@ -117,7 +117,7 @@ def get_invoice(invoice_id):
 @invoices_bp.route('/<invoice_id>', methods=['PUT'])
 @jwt_required()
 def update_invoice(invoice_id):
-    current_user = get_jwt_identity()
+    current_user = get_jwt()
     data = request.get_json()
     db = current_app.config['db']
 

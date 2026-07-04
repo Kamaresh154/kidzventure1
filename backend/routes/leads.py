@@ -1,6 +1,6 @@
 from datetime import datetime
 from flask import Blueprint, request, jsonify, current_app, send_file
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt
 from utils.helpers import admin_required, employee_or_admin, serialize_doc, serialize_list
 from bson.objectid import ObjectId
 import io
@@ -12,7 +12,7 @@ leads_bp = Blueprint('leads', __name__)
 @leads_bp.route('', methods=['GET'])
 @jwt_required()
 def get_leads():
-    current_user = get_jwt_identity()
+    current_user = get_jwt()
     db = current_app.config['db']
 
     page = int(request.args.get('page', 1))
@@ -57,7 +57,7 @@ def get_leads():
 @leads_bp.route('', methods=['POST'])
 @employee_or_admin
 def create_lead():
-    current_user = get_jwt_identity()
+    current_user = get_jwt()
     data = request.get_json()
     db = current_app.config['db']
 
@@ -96,7 +96,7 @@ def get_lead(lead_id):
 @leads_bp.route('/<lead_id>', methods=['PUT'])
 @jwt_required()
 def update_lead(lead_id):
-    current_user = get_jwt_identity()
+    current_user = get_jwt()
     data = request.get_json()
     db = current_app.config['db']
 

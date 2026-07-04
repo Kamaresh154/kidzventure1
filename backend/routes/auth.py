@@ -1,6 +1,6 @@
 from datetime import datetime
 from flask import Blueprint, request, jsonify, current_app
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt
 import bcrypt
 
 auth_bp = Blueprint('auth', __name__)
@@ -26,8 +26,8 @@ def login():
             return jsonify({'error': 'Account is disabled'}), 403
 
         token = create_access_token(
-            identity={
-                'id': str(user['_id']),
+            identity=str(user['_id']),
+            additional_claims={
                 'email': user['email'],
                 'full_name': user['full_name'],
                 'role': user['role'],
@@ -53,14 +53,19 @@ def login():
 @auth_bp.route('/me', methods=['GET'])
 @jwt_required()
 def get_me():
-    current_user = get_jwt_identity()
-    return jsonify({'user': current_user})
+    claims = get_jwt()
+    return jsonify({'user': {
+        'id': claims.get('sub', ''),
+        'email': claims.get('email', ''),
+        'full_name': claims.get('full_name', ''),
+        'role': claims.get('role', ''),
+    }})
 
 
 @auth_bp.route('/change-password', methods=['POST'])
 @jwt_required()
 def change_password():
-    current_user = get_jwt_identity()
+    claims = get_jwt()
     data = request.get_json()
     old_pw = data.get('old_password', '')
     new_pw = data.get('new_password', '')
@@ -72,7 +77,7 @@ def change_password():
         return jsonify({'error': 'Password must be at least 6 characters'}), 400
 
     db = current_app.config['db']
-    user = db.users.find_one({'email': current_user['email']})
+    user = db.users.find_one({'email': claims.get('email', '')})
 
     if not bcrypt.checkpw(old_pw.encode(), user['password_hash'].encode()):
         return jsonify({'error': 'Current password is incorrect'}), 401

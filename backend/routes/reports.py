@@ -1,6 +1,6 @@
 from datetime import datetime, date, timedelta
 from flask import Blueprint, request, jsonify, current_app
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt
 from utils.helpers import admin_required, employee_or_admin
 
 reports_bp = Blueprint('reports', __name__)
@@ -9,7 +9,7 @@ reports_bp = Blueprint('reports', __name__)
 @reports_bp.route('/dashboard', methods=['GET'])
 @jwt_required()
 def get_dashboard():
-    current_user = get_jwt_identity()
+    current_user = get_jwt()
     db = current_app.config['db']
 
     today = date.today().isoformat()
@@ -79,8 +79,8 @@ def get_dashboard():
             'assigned_to': emp_name,
             'created_at': {'$gte': datetime.combine(date.today().replace(day=1), datetime.min.time())}
         })
-        my_leaves = db.leave_requests.count_documents({'user_id': current_user['id'], 'status': 'Pending'})
-        attendance_today = db.attendance.find_one({'user_id': current_user['id'], 'date': today})
+        my_leaves = db.leave_requests.count_documents({'user_id': current_user['sub'], 'status': 'Pending'})
+        attendance_today = db.attendance.find_one({'user_id': current_user['sub'], 'date': today})
 
         recent_contacts = list(db.leads.find(
             {'assigned_to': emp_name, 'contacted_count': {'$gt': 0}},

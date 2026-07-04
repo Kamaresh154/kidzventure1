@@ -1,6 +1,6 @@
 from datetime import datetime
 from flask import Blueprint, request, jsonify, current_app, send_file
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required
 from utils.helpers import admin_required, employee_or_admin, serialize_doc, serialize_list
 from bson.objectid import ObjectId
 import io
