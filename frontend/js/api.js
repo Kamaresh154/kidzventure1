@@ -93,7 +93,7 @@ async function downloadBlob(blob, filename) {
       const saved = await Capacitor.Plugins.Filesystem.writeFile({
         path: filename,
         data: b64,
-        directory: 'Cache',
+        directory: 'CACHE',
       });
       await Capacitor.Plugins.Share.share({
         title: filename,
