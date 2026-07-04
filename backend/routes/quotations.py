@@ -2,6 +2,7 @@ from datetime import datetime
 from flask import Blueprint, request, jsonify, current_app, send_file
 from flask_jwt_extended import jwt_required, get_jwt
 from utils.helpers import admin_required, employee_or_admin, generate_quotation_no, serialize_doc, serialize_list
+from utils.pdf_utils import generate_document_pdf, format_currency
 from bson.objectid import ObjectId
 import io
 import openpyxl
@@ -138,6 +139,42 @@ def delete_quotation(quotation_id):
     db = current_app.config['db']
     db.quotations.delete_one({'_id': ObjectId(quotation_id)})
     return jsonify({'message': 'Quotation deleted'})
+
+
+@quotations_bp.route('/<quotation_id>/pdf', methods=['GET'])
+@jwt_required()
+def quotation_pdf(quotation_id):
+    db = current_app.config['db']
+    q = db.quotations.find_one({'_id': ObjectId(quotation_id)})
+    if not q:
+        return jsonify({'error': 'Quotation not found'}), 404
+
+    customer_lines = [q.get('customer_name', ''), q.get('customer_phone', ''), q.get('customer_email', '')]
+    extra_lines = ['Status: ' + (q.get('status') or '')]
+
+    totals = {
+        'subtotal': q.get('subtotal', 0),
+        'discount': q.get('discount', 0),
+        'tax': q.get('tax', 0),
+        'grand_total': q.get('grand_total', 0),
+    }
+
+    buf = generate_document_pdf(
+        'QUOTATION',
+        q.get('quotation_no', ''),
+        str(q.get('created_at', '') or '')[:10],
+        customer_lines,
+        q.get('items', []),
+        totals,
+        extra_lines,
+    )
+
+    return send_file(
+        buf,
+        mimetype='application/pdf',
+        as_attachment=True,
+        download_name=(q.get('quotation_no', 'quotation') + '.pdf'),
+    )
 
 
 @quotations_bp.route('/export', methods=['GET'])

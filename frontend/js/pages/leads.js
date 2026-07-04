@@ -155,7 +155,7 @@ const LeadsPage = {
 
   openWhatsApp(phone) {
     var num = phone.replace(/[^0-9]/g, '');
-    if (num) window.open('https://wa.me/91' + num, '_blank');
+    if (num) openExternalUrl('https://wa.me/91' + num);
     else showToast('No phone number', 'error');
   },
 
@@ -163,7 +163,7 @@ const LeadsPage = {
     if (email) {
       var subject = encodeURIComponent('KidzVenture - Enquiry');
       var body = encodeURIComponent('Dear ' + name + ',\n\nThank you for your interest in KidzVenture.\n\n');
-      window.open('mailto:' + email + '?subject=' + subject + '&body=' + body, '_blank');
+      openExternalUrl('mailto:' + email + '?subject=' + subject + '&body=' + body);
     } else showToast('No email address', 'error');
   },
 

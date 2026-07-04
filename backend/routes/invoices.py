@@ -2,6 +2,7 @@ from datetime import datetime, date
 from flask import Blueprint, request, jsonify, current_app, send_file
 from flask_jwt_extended import jwt_required, get_jwt
 from utils.helpers import admin_required, employee_or_admin, serialize_doc, serialize_list
+from utils.pdf_utils import generate_document_pdf, format_currency
 from bson.objectid import ObjectId
 import io
 import openpyxl
@@ -171,6 +172,52 @@ def delete_invoice(invoice_id):
     db = current_app.config['db']
     db.invoices.delete_one({'_id': ObjectId(invoice_id)})
     return jsonify({'message': 'Invoice deleted'})
+
+
+@invoices_bp.route('/<invoice_id>/pdf', methods=['GET'])
+@jwt_required()
+def invoice_pdf(invoice_id):
+    db = current_app.config['db']
+    inv = db.invoices.find_one({'_id': ObjectId(invoice_id)})
+    if not inv:
+        return jsonify({'error': 'Invoice not found'}), 404
+
+    customer_lines = [inv.get('customer_name', ''), inv.get('customer_phone', ''), inv.get('customer_email', '')]
+    if inv.get('customer_address'):
+        customer_lines.append(inv['customer_address'])
+
+    extra_lines = ['Status: ' + (inv.get('payment_status') or '')]
+    if inv.get('due_date'):
+        extra_lines.append('Due: ' + str(inv['due_date']))
+    extra_lines += [
+        'Payment: ' + (inv.get('payment_method') or ''),
+        'Paid: ' + format_currency(inv.get('amount_paid', 0)),
+        'Balance: ' + format_currency(inv.get('balance', 0)),
+    ]
+
+    totals = {
+        'subtotal': inv.get('subtotal', 0),
+        'discount': inv.get('discount', 0),
+        'tax': inv.get('tax', 0),
+        'grand_total': inv.get('grand_total', 0),
+    }
+
+    buf = generate_document_pdf(
+        'INVOICE',
+        inv.get('invoice_no', ''),
+        str(inv.get('created_at', '') or '')[:10],
+        customer_lines,
+        inv.get('items', []),
+        totals,
+        extra_lines,
+    )
+
+    return send_file(
+        buf,
+        mimetype='application/pdf',
+        as_attachment=True,
+        download_name=(inv.get('invoice_no', 'invoice') + '.pdf'),
+    )
 
 
 @invoices_bp.route('/export', methods=['GET'])

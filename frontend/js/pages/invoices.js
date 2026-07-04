@@ -289,78 +289,8 @@ var InvoicesPage = {
 
   async printInvoice(id) {
     try {
-      var res = await API.get('/invoices/' + id);
-      var inv = res.invoice;
-      var logoHtml = '';
-      try {
-        var logoData = localStorage.getItem('invoice_logo');
-        if (logoData) logoHtml = '<img src="' + logoData + '" style="height:60px;margin-bottom:0.5rem">';
-      } catch(e) {}
-
-      var itemsHtml = inv.items.map(function(item, i) {
-        return '<tr><td>' + (i + 1) + '</td><td>' + item.name + '</td><td>' + item.qty + '</td><td>' + formatCurrency(item.price) + '</td><td>' + formatCurrency(item.qty * item.price) + '</td></tr>';
-      }).join('');
-
-      var win = window.open('', '_blank');
-      win.document.write(
-        '<html><head><title>Invoice ' + inv.invoice_no + '</title>'
-        + '<style>'
-        + 'body{font-family:Arial,sans-serif;padding:2rem;max-width:800px;margin:0 auto;color:#333}'
-        + '.header{display:flex;justify-content:space-between;align-items:start;margin-bottom:2rem;border-bottom:2px solid #4f46e5;padding-bottom:1rem}'
-        + '.header-left h1{color:#4f46e5;font-size:1.5rem;margin:0}'
-        + '.header-left p{color:#666;margin:0.2rem 0}'
-        + '.header-right{text-align:right}'
-        + '.header-right h2{font-size:1.3rem;margin:0;color:#333}'
-        + '.header-right p{color:#666;margin:0.2rem 0;font-size:0.85rem}'
-        + '.info{display:flex;justify-content:space-between;margin-bottom:1.5rem;padding:1rem;background:#f9f9f9;border-radius:8px}'
-        + '.info div{font-size:0.9rem}'
-        + '.info strong{color:#333}'
-        + 'table{width:100%;border-collapse:collapse;margin:1rem 0}'
-        + 'th{background:#4f46e5;color:#fff;padding:0.6rem;text-align:left;font-size:0.85rem}'
-        + 'td{padding:0.6rem;border-bottom:1px solid #eee}'
-        + 'tr:nth-child(even){background:#f5f5f5}'
-        + '.summary{text-align:right;margin-top:1rem;padding:1rem;background:#f9f9f9;border-radius:8px}'
-        + '.summary p{margin:0.3rem 0;font-size:0.95rem}'
-        + '.summary .grand{font-size:1.3rem;font-weight:bold;color:#4f46e5;margin-top:0.5rem}'
-        + '.footer{margin-top:3rem;text-align:center;font-size:0.8rem;color:#999;border-top:1px solid #eee;padding-top:1rem}'
-        + '.badge{display:inline-block;padding:0.2rem 0.6rem;border-radius:4px;font-size:0.75rem;font-weight:600}'
-        + '.badge-paid{background:#d4edda;color:#155724}'
-        + '.badge-unpaid{background:#f8d7da;color:#721c24}'
-        + '.badge-partial{background:#fff3cd;color:#856404}'
-        + '@media print{body{padding:1rem}.no-print{display:none}}'
-        + '</style></head><body>'
-        + '<div class="header">'
-        + '<div class="header-left">'
-        + logoHtml
-        + '<h1>KidzVenture</h1>'
-        + '<p>Montessori Materials & Educational Products</p>'
-        + '</div>'
-        + '<div class="header-right">'
-        + '<h2>INVOICE</h2>'
-        + '<p><strong>' + inv.invoice_no + '</strong></p>'
-        + '<p>Date: ' + formatDate(inv.created_at) + '</p>'
-        + (inv.due_date ? '<p>Due: ' + formatDate(inv.due_date) + '</p>' : '')
-        + '<p><span class="badge badge-' + (inv.payment_status || '').toLowerCase() + '">' + inv.payment_status + '</span></p>'
-        + '</div></div>'
-        + '<div class="info">'
-        + '<div><strong>Bill To:</strong><br>' + inv.customer_name + '<br>' + (inv.customer_phone || '') + '<br>' + (inv.customer_email || '') + (inv.customer_address ? '<br>' + inv.customer_address : '') + '</div>'
-        + '<div style="text-align:right"><strong>Payment:</strong><br>' + inv.payment_method + '<br>Paid: ' + formatCurrency(inv.amount_paid || 0) + '<br>Balance: ' + formatCurrency(inv.balance || 0) + '</div>'
-        + '</div>'
-        + '<table><tr><th>#</th><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr>'
-        + itemsHtml
-        + '</table>'
-        + '<div class="summary">'
-        + '<p>Subtotal: ' + formatCurrency(inv.subtotal) + '</p>'
-        + (inv.discount ? '<p>Discount: -' + formatCurrency(inv.discount) + '</p>' : '')
-        + (inv.tax ? '<p>Tax: ' + formatCurrency(inv.tax) + '</p>' : '')
-        + '<div class="grand">Grand Total: ' + formatCurrency(inv.grand_total) + '</div>'
-        + '</div>'
-        + (inv.notes ? '<div style="margin-top:1rem;padding:0.5rem;background:#f9f9f9;border-radius:4px;font-size:0.85rem"><strong>Notes:</strong> ' + inv.notes + '</div>' : '')
-        + '<div class="footer"><p>Thank you for your business!</p><p>KidzVenture Montessori Materials | Contact: info@kidzventure.com</p></div>'
-        + '<div class="no-print" style="text-align:center;margin-top:1rem"><button onclick="window.print()" style="padding:0.5rem 2rem;background:#4f46e5;color:#fff;border:none;border-radius:6px;cursor:pointer">Print</button></div>'
-        + '</body></html>'
-      );
-      win.document.close();
+      var blob = await API.download('/invoices/' + id + '/pdf');
+      downloadBlob(blob, 'Invoice-' + id + '.pdf');
     } catch (err) { showToast(err.message, 'error'); }
   },
 

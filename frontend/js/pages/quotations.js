@@ -37,7 +37,11 @@ var QuotationsPage = {
             + '<td><div style="font-weight:600">' + q.customer_name + '</div>'
             + '<div style="font-size:0.75rem;color:#9ca3af">' + (q.customer_phone || '') + '</div></td>'
             + '<td style="font-weight:600">' + formatCurrency(q.grand_total) + '</td>'
-            + '<td>' + getStatusBadge(q.status) + '</td>'
+            + '<td><select class="status-select" onchange="QuotationsPage.updateStatus(\'' + q._id + '\', this.value)">'
+            + ['Draft', 'Sent', 'Approved', 'Rejected'].map(function(s) {
+                return '<option value="' + s + '"' + (q.status === s ? ' selected' : '') + '>' + s + '</option>';
+              }).join('')
+            + '</select></td>'
             + '<td><button class="btn btn-sm btn-outline" onclick="QuotationsPage.showForm(\'' + q._id + '\')">✏️</button>'
             + '<button class="btn btn-sm btn-outline" onclick="QuotationsPage.printQuotation(\'' + q._id + '\')">🖨️</button>'
             + '<button class="btn btn-sm btn-danger" onclick="QuotationsPage.deleteQuotation(\'' + q._id + '\')">🗑️</button></td>'
@@ -263,45 +267,15 @@ var QuotationsPage = {
     catch (err) { showToast(err.message, 'error'); }
   },
 
+  async updateStatus(id, status) {
+    try { await API.put('/quotations/' + id, { status: status }); showToast('Status updated to ' + status); }
+    catch (err) { showToast(err.message, 'error'); App.renderPage('quotations'); }
+  },
+
   async printQuotation(id) {
     try {
-      var res = await API.get('/quotations/' + id);
-      var q = res.quotation;
-      var itemsHtml = q.items.map(function(item, i) {
-        return '<tr><td>' + (i + 1) + '</td><td>' + item.name + '</td><td>' + item.qty + '</td><td>' + formatCurrency(item.price) + '</td><td>' + formatCurrency(item.qty * item.price) + '</td></tr>';
-      }).join('');
-
-      var win = window.open('', '_blank');
-      win.document.write(
-        '<html><head><title>Quotation ' + q.quotation_no + '</title>'
-        + '<style>'
-        + 'body{font-family:Arial,sans-serif;padding:2rem;max-width:800px;margin:0 auto}'
-        + 'h1{color:#4f46e5;font-size:1.5rem;margin-bottom:0.5rem}'
-        + '.header{display:flex;justify-content:space-between;margin-bottom:2rem}'
-        + 'table{width:100%;border-collapse:collapse;margin:1rem 0}'
-        + 'th,td{border:1px solid #ddd;padding:0.5rem;text-align:left}'
-        + 'th{background:#f5f5f5}.total{text-align:right;font-size:1.2rem;font-weight:bold;margin-top:1rem}'
-        + '.footer{margin-top:3rem;font-size:0.85rem;color:#666}'
-        + '@media print{body{padding:1rem}}'
-        + '</style></head><body>'
-        + '<div class="header"><div><h1>KidzVenture</h1><p>Montessori Materials</p></div>'
-        + '<div><h2>Quotation</h2><p>' + q.quotation_no + '</p><p>' + formatDate(q.created_at) + '</p></div></div>'
-        + '<div class="info"><p><strong>Customer:</strong> ' + q.customer_name + '</p>'
-        + '<p><strong>Phone:</strong> ' + q.customer_phone + '</p>'
-        + '<p><strong>Email:</strong> ' + q.customer_email + '</p></div>'
-        + '<table><tr><th>#</th><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr>'
-        + itemsHtml
-        + '</table>'
-        + '<p><strong>Subtotal:</strong> ' + formatCurrency(q.subtotal) + '</p>'
-        + (q.discount ? '<p><strong>Discount:</strong> -' + formatCurrency(q.discount) + '</p>' : '')
-        + (q.tax ? '<p><strong>Tax:</strong> ' + formatCurrency(q.tax) + '</p>' : '')
-        + '<div class="total">Grand Total: ' + formatCurrency(q.grand_total) + '</div>'
-        + '<div class="footer"><p>Thank you for your business!</p>'
-        + '<p>KidzVenture Montessori Materials | Contact: info@kidzventure.com</p></div>'
-        + '<script>window.print();window.close();<' + '/script>'
-        + '</body></html>'
-      );
-      win.document.close();
+      var blob = await API.download('/quotations/' + id + '/pdf');
+      downloadBlob(blob, 'Quotation-' + id + '.pdf');
     } catch (err) { showToast(err.message, 'error'); }
   },
 

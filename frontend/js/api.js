@@ -63,6 +63,16 @@ function showToast(message, type = 'success') {
   setTimeout(() => toast.remove(), 3000);
 }
 
+function openExternalUrl(url) {
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform() && window.Capacitor.Plugins.Browser) {
+    window.Capacitor.Plugins.Browser.open({ url: url }).catch(function () {
+      window.open(url, '_blank');
+    });
+  } else {
+    window.open(url, '_blank');
+  }
+}
+
 function showLoading() {
   const div = document.createElement('div');
   div.className = 'loading';
