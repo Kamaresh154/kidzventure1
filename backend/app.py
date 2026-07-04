@@ -1,7 +1,6 @@
 import os
 from datetime import timedelta
-from flask import Flask, jsonify, send_from_directory
-from flask_cors import CORS
+from flask import Flask, jsonify, send_from_directory, request
 from flask_jwt_extended import JWTManager
 from flask_pymongo import PyMongo
 from config import Config
@@ -15,8 +14,6 @@ def create_app():
     app.config.from_object(Config)
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(seconds=Config.JWT_ACCESS_TOKEN_EXPIRES)
     app.config['MONGO_URI'] = Config.MONGO_URI
-
-    CORS(app, origins=lambda origin: origin, supports_credentials=True)
     jwt.init_app(app)
     mongo.init_app(app)
 
@@ -34,6 +31,30 @@ def create_app():
         LeaveRequest.create_indexes(db)
     except Exception as e:
         print('Warning: Could not create indexes:', e)
+
+    # CORS - allow all origins with credentials support
+    @app.before_request
+    def handle_options():
+        if request.method == 'OPTIONS':
+            origin = request.headers.get('Origin', '*')
+            resp = jsonify({'ok': True})
+            resp.headers['Access-Control-Allow-Origin'] = origin
+            resp.headers['Access-Control-Allow-Credentials'] = 'true'
+            resp.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
+            resp.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+            return resp
+
+    @app.after_request
+    def add_cors(response):
+        origin = request.headers.get('Origin')
+        if origin:
+            response.headers['Access-Control-Allow-Origin'] = origin
+            response.headers['Access-Control-Allow-Credentials'] = 'true'
+        else:
+            response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+        return response
 
     # Register blueprints
     from routes.auth import auth_bp
