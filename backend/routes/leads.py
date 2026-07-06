@@ -28,6 +28,10 @@ def get_leads():
             {'name': {'$regex': search, '$options': 'i'}},
             {'phone': {'$regex': search, '$options': 'i'}},
             {'email': {'$regex': search, '$options': 'i'}},
+            {'school_name': {'$regex': search, '$options': 'i'}},
+            {'company': {'$regex': search, '$options': 'i'}},
+            {'city': {'$regex': search, '$options': 'i'}},
+            {'lead_source': {'$regex': search, '$options': 'i'}},
         ]
     if status_filter:
         query['status'] = status_filter
@@ -61,21 +65,20 @@ def create_lead():
     data = request.get_json()
     db = current_app.config['db']
 
-    lead = {
-        'name': data.get('name', ''),
-        'email': data.get('email', ''),
-        'phone': data.get('phone', ''),
-        'whatsapp': data.get('whatsapp', data.get('phone', '')),
-        'address': data.get('address', ''),
-        'status': data.get('status', 'New'),
-        'assigned_to': data.get('assigned_to', current_user['full_name']),
-        'notes': data.get('notes', ''),
-        'contacted_count': 0,
-        'last_contacted': None,
-        'created_by': current_user['full_name'],
-        'created_at': datetime.utcnow(),
-        'updated_at': datetime.utcnow(),
-    }
+    exclude = {'lead_id', 'id', '_id', 'created_at', 'updated_at', 'created_by', 'contacted_count', 'last_contacted'}
+    lead = {k: v for k, v in data.items() if k not in exclude}
+
+    lead.setdefault('name', '')
+    lead.setdefault('phone', '')
+    lead.setdefault('status', 'New')
+    lead.setdefault('assigned_to', current_user['full_name'])
+    if 'whatsapp' not in lead and lead.get('phone'):
+        lead['whatsapp'] = lead['phone']
+    lead['contacted_count'] = 0
+    lead['last_contacted'] = None
+    lead['created_by'] = current_user['full_name']
+    lead['created_at'] = datetime.utcnow()
+    lead['updated_at'] = datetime.utcnow()
 
     result = db.leads.insert_one(lead)
     lead['_id'] = str(result.inserted_id)
@@ -107,10 +110,8 @@ def update_lead(lead_id):
     if current_user['role'] == 'employee' and lead.get('assigned_to') != current_user['full_name']:
         return jsonify({'error': 'Not authorized to update this lead'}), 403
 
-    update = {}
-    for field in ['name', 'email', 'phone', 'whatsapp', 'address', 'status', 'assigned_to', 'notes']:
-        if field in data:
-            update[field] = data[field]
+    exclude = {'lead_id', 'id', '_id', 'created_at', 'updated_at', 'created_by', 'contacted_count', 'last_contacted'}
+    update = {k: v for k, v in data.items() if k not in exclude}
 
     if 'contacted' in data and data['contacted']:
         update['contacted_count'] = (lead.get('contacted_count', 0) + 1)
@@ -148,25 +149,31 @@ def import_leads():
     skipped = 0
     errors = []
 
-    # Detect header row
-    first_row = next(ws.iter_rows(min_row=1, max_row=1, values_only=True), None)
-    has_header = first_row and any(str(h).strip().lower() in ('name', 'lead', 'customer', 'contact') for h in first_row if h)
+    rows_iter = ws.iter_rows(values_only=True)
+    first_row = next(rows_iter, None)
+    has_header = first_row and any(str(h).strip().lower() in ('name', 'lead', 'customer', 'contact', 'school name') for h in first_row if h)
 
-    for i, row in enumerate(ws.iter_rows(min_row=2 if has_header else 1, values_only=True), start=2 if has_header else 1):
+    if has_header:
+        headers = [str(h).strip().lower().replace(' ', '_').replace('/', '_').replace('-', '_') if h else '' for h in first_row]
+    else:
+        headers = ['name', 'phone', 'email', 'whatsapp', 'address', 'status', 'assigned_to']
+
+    start_row = 2 if has_header else 1
+    for i, row in enumerate(rows_iter if has_header else ws.iter_rows(min_row=1, values_only=True), start=start_row):
         try:
-            cells = [c for c in row if c is not None]
-            if not cells:
+            cells = list(row) if row else []
+            if not any(c is not None for c in cells):
                 skipped += 1
                 continue
 
-            name = str(cells[0]).strip() if len(cells) > 0 else ''
-            phone = str(cells[1]).strip() if len(cells) > 1 else ''
-            email = str(cells[2]).strip().lower() if len(cells) > 2 else ''
-            whatsapp = str(cells[3]).strip() if len(cells) > 3 else phone
-            address = str(cells[4]).strip() if len(cells) > 4 else ''
-            status = str(cells[5]).strip() if len(cells) > 5 else 'New'
-            assigned_to = str(cells[6]).strip() if len(cells) > 6 else ''
+            lead = {'contacted_count': 0, 'last_contacted': None, 'created_by': 'import', 'created_at': datetime.utcnow(), 'updated_at': datetime.utcnow()}
+            for ci, val in enumerate(cells):
+                if ci < len(headers) and headers[ci] and val is not None:
+                    key = headers[ci]
+                    lead[key] = str(val).strip()
 
+            name = lead.get('name', '') or ''
+            phone = lead.get('phone', '') or ''
             if not name and not phone:
                 skipped += 1
                 continue
@@ -175,21 +182,9 @@ def import_leads():
                 duplicates += 1
                 continue
 
-            lead = {
-                'name': name,
-                'phone': phone,
-                'email': email,
-                'whatsapp': whatsapp,
-                'address': address,
-                'status': status,
-                'assigned_to': assigned_to,
-                'notes': '',
-                'contacted_count': 0,
-                'last_contacted': None,
-                'created_by': 'import',
-                'created_at': datetime.utcnow(),
-                'updated_at': datetime.utcnow(),
-            }
+            lead.setdefault('status', 'New')
+            lead.setdefault('whatsapp', phone)
+
             db.leads.insert_one(lead)
             imported += 1
         except Exception as e:
@@ -210,24 +205,25 @@ def export_leads():
     db = current_app.config['db']
     leads = list(db.leads.find().sort('created_at', -1))
 
+    all_keys = ['name', 'phone', 'email', 'whatsapp', 'status', 'assigned_to', 'created_by']
+    for l in leads:
+        for k in l:
+            if k not in all_keys and k not in ('_id', 'contacted_count', 'last_contacted', 'created_at', 'updated_at'):
+                all_keys.append(k)
+
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = 'Leads'
-    ws.append(['Name', 'Phone', 'Email', 'WhatsApp', 'Address', 'Status', 'Assigned To', 'Contacted Count', 'Last Contacted', 'Notes'])
+    ws.append(all_keys)
 
     for l in leads:
-        ws.append([
-            l.get('name', ''),
-            l.get('phone', ''),
-            l.get('email', ''),
-            l.get('whatsapp', ''),
-            l.get('address', ''),
-            l.get('status', ''),
-            l.get('assigned_to', ''),
-            l.get('contacted_count', 0),
-            str(l.get('last_contacted', '') or ''),
-            l.get('notes', ''),
-        ])
+        row = []
+        for k in all_keys:
+            v = l.get(k, '')
+            if isinstance(v, datetime):
+                v = str(v)
+            row.append(v)
+        ws.append(row)
 
     output = io.BytesIO()
     wb.save(output)

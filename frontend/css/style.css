@@ -443,6 +443,11 @@ tr:hover { background: rgba(79, 70, 229, 0.05); }
   to { transform: translateX(0); opacity: 1; }
 }
 
+/* ===== COLLAPSIBLE SECTIONS ===== */
+details { background: #1e1e32; border-radius: 8px; padding: 0 0.75rem; border: 1px solid #2d2d4a; }
+summary { padding: 0.6rem 0; cursor: pointer; font-weight: 600; color: #818cf8; outline: none; }
+details[open] { padding-bottom: 0.5rem; }
+
 /* ===== ITEMS LIST (Quotation) ===== */
 .item-row {
   display: grid;
