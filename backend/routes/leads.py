@@ -41,7 +41,7 @@ def get_leads():
         '_id': 1, 'name': 1, 'phone': 1, 'whatsapp': 1, 'email': 1,
         'status': 1, 'assigned_to': 1, 'lead_source': 1, 'city': 1,
         'company': 1, 'organization': 1, 'created_at': 1,
-    }).sort('created_at', -1)
+    }).sort('created_at', 1)
                  .skip((page - 1) * limit)
                  .limit(limit))
 
