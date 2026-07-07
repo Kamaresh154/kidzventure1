@@ -26,3 +26,4 @@ class Quotation:
     def create_indexes(db):
         db.quotations.create_index('quotation_no', unique=True)
         db.quotations.create_index('created_by')
+        db.quotations.create_index('created_at')

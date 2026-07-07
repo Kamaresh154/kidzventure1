@@ -27,3 +27,4 @@ class Lead:
         db.leads.create_index('phone')
         db.leads.create_index('assigned_to')
         db.leads.create_index('status')
+        db.leads.create_index('created_at')

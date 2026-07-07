@@ -48,8 +48,10 @@ def get_invoices():
         query['payment_status'] = status
 
     total = db.invoices.count_documents(query)
-    invoices = list(db.invoices.find(query)
-                    .sort('created_at', -1)
+    invoices = list(db.invoices.find(query, {
+        '_id': 1, 'invoice_no': 1, 'customer_name': 1, 'customer_phone': 1,
+        'grand_total': 1, 'amount_paid': 1, 'payment_status': 1, 'created_at': 1,
+    }).sort('created_at', -1)
                     .skip((page - 1) * limit)
                     .limit(limit))
 
