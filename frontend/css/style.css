@@ -470,12 +470,59 @@ details[open] { padding-bottom: 0.5rem; }
 }
 
 /* ===== RESPONSIVE ===== */
-@media (min-width: 768px) {
+/* Tablet (768px - 1023px): wider content, but drawer stays overlay */
+@media (min-width: 768px) and (max-width: 1023px) {
   .stats-grid { grid-template-columns: repeat(4, 1fr); }
-  .drawer { left: 0; }
+  .page { padding: 1.5rem; max-width: 90%; }
+  .form-row { grid-template-columns: 1fr 1fr; }
+  .modal { max-width: 600px; }
+}
+
+/* Desktop (1024px+): fixed sidebar + shifted content */
+@media (min-width: 1024px) {
+  .drawer {
+    left: 0;
+    z-index: 100;
+  }
   .drawer-overlay { display: none; }
-  .page { padding: 1.5rem; }
   .app-header .menu-btn { display: none; }
+  .app-header {
+    margin-left: 280px;
+  }
+  .page {
+    margin-left: 280px;
+    max-width: calc(100% - 280px);
+    padding: 1.5rem 2rem;
+    padding-bottom: 2rem;
+  }
+  .stats-grid { grid-template-columns: repeat(6, 1fr); }
+  .form-row { grid-template-columns: 1fr 1fr 1fr; }
+
+  /* Centered modal on desktop */
+  .modal-overlay { align-items: center; }
+  .modal {
+    border-radius: 12px;
+    max-width: 700px;
+    max-height: 90vh;
+    transform: translateY(0) scale(0.95);
+    transition: transform 0.3s, opacity 0.3s;
+    opacity: 0;
+  }
+  .modal-overlay.open .modal {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+
+  /* Wider modals for form-heavy pages */
+  .modal.wide { max-width: 900px; }
+}
+
+/* Large desktop (1440px+) */
+@media (min-width: 1440px) {
+  .stats-grid { grid-template-columns: repeat(8, 1fr); }
+  .page { padding: 2rem 3rem; }
+  .modal { max-width: 800px; }
+  .modal.wide { max-width: 1000px; }
 }
 
 @media (max-width: 767px) {

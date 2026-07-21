@@ -260,14 +260,29 @@ const LeadsPage = {
     return html;
   },
 
-  showForm(id) {
+  async showForm(id) {
+    var employees = [];
+    try { var empData = await API.get('/employees'); employees = empData.employees || []; } catch (e) {}
+    var empNames = employees.map(function(e) { return e.full_name; });
+
+    for (var si = 0; si < this.fieldSections.length; si++) {
+      var sec = this.fieldSections[si];
+      for (var fi = 0; fi < sec.fields.length; fi++) {
+        if (sec.fields[fi].key === 'assigned_to') {
+          sec.fields[fi].type = 'select';
+          sec.fields[fi].options = empNames;
+          break;
+        }
+      }
+    }
+
     var title = id ? 'Edit Lead' : 'New Lead';
     var formHtml = '<form id="lead-form">'
       + '<input type="hidden" name="lead_id" value="' + (id || '') + '">'
       + this.renderFormFields(null)
       + '<button type="submit" class="btn btn-primary btn-block" style="margin-top:0.5rem">' + (id ? 'Update' : 'Add') + ' Lead</button>'
       + '</form>';
-    showModal(title, formHtml);
+    showModal(title, formHtml, true, 'wide');
 
     if (id) {
       API.get('/leads/' + id).then(function(res) {

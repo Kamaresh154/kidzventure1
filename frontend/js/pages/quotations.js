@@ -112,7 +112,8 @@ var QuotationsPage = {
       + '</div>'
       + '<div style="text-align:right;padding:0.5rem 0;font-size:1.1rem;font-weight:700">Total: <span id="qtn-total">₹0.00</span></div>'
       + '<button type="submit" class="btn btn-primary btn-block">' + (id ? 'Update' : 'Create') + ' Quotation</button>'
-      + '</form>'
+      + '</form>',
+      true, 'wide'
     );
 
     var container = document.getElementById('items-container');
@@ -220,7 +221,7 @@ var QuotationsPage = {
       + '<button type="button" class="btn btn-danger" onclick="closeModal()">Cancel</button>'
       + '</div>';
 
-    showModal('Select Products (' + prods.length + ' items)', listHtml, true);
+    showModal('Select Products (' + prods.length + ' items)', listHtml, true, 'wide');
   },
 
   addSelectedProducts() {

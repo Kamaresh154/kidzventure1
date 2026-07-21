@@ -4,9 +4,9 @@
   "description": "Business management for KidzVenture",
   "start_url": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
   "background_color": "#1a1a2e",
   "theme_color": "#1a1a2e",
-  "orientation": "portrait",
   "icons": [
     {
       "src": "logo.jpeg",

@@ -196,14 +196,14 @@ const App = {
 };
 
 // Modal helpers
-function showModal(title, bodyHtml, showClose = true) {
+function showModal(title, bodyHtml, showClose = true, className = '') {
   const existing = document.querySelector('.modal-overlay');
   if (existing) existing.remove();
 
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay open';
   overlay.innerHTML = `
-    <div class="modal">
+    <div class="modal${className ? ' ' + className : ''}">
       <div class="modal-header">
         <div class="modal-title">${title}</div>
         ${showClose ? '<button class="modal-close" onclick="closeModal()">×</button>' : ''}

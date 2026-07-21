@@ -137,7 +137,8 @@ var InvoicesPage = {
       + '<div style="text-align:right;padding:0.5rem 0;font-size:1.1rem;font-weight:700">'
       + 'Total: <span id="inv-total">₹0.00</span> | Balance: <span id="inv-balance">₹0.00</span></div>'
       + '<div class="form-group"><label class="form-label">Notes</label><textarea name="notes">' + notes + '</textarea></div>'
-      + '<button type="submit" class="btn btn-primary btn-block">' + (id ? 'Update' : 'Create') + ' Invoice</button></form>'
+      + '<button type="submit" class="btn btn-primary btn-block">' + (id ? 'Update' : 'Create') + ' Invoice</button></form>',
+      true, 'wide'
     );
 
     var container = document.getElementById('inv-items-container');
@@ -236,7 +237,7 @@ var InvoicesPage = {
       + '<button type="button" class="btn btn-primary btn-block" onclick="InvoicesPage.addSelectedProducts()">Add Selected</button>'
       + '<button type="button" class="btn btn-danger" onclick="closeModal()">Cancel</button>'
       + '</div>';
-    showModal('Select Products (' + prods.length + ' items)', listHtml, true);
+    showModal('Select Products (' + prods.length + ' items)', listHtml, true, 'wide');
   },
 
   addSelectedProducts() {
