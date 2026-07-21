@@ -2,6 +2,7 @@ const LeadsPage = {
   currentPage: 1,
   search: '',
   statusFilter: '',
+  employees: [],
 
   async render() {
     return '<div class="loading"><div class="spinner"></div></div>';
@@ -9,6 +10,9 @@ const LeadsPage = {
 
   async renderLeads() {
     try {
+      if (!this.employees.length) {
+        try { var empRes = await API.get('/employees'); this.employees = empRes.employees || []; } catch (e) {}
+      }
       const params = new URLSearchParams({ page: this.currentPage, limit: 50 });
       if (this.search) params.set('search', this.search);
       if (this.statusFilter) params.set('status', this.statusFilter);
@@ -260,10 +264,8 @@ const LeadsPage = {
     return html;
   },
 
-  async showForm(id) {
-    var employees = [];
-    try { var empData = await API.get('/employees'); employees = empData.employees || []; } catch (e) {}
-    var empNames = employees.map(function(e) { return e.full_name; });
+  showForm(id) {
+    var empNames = this.employees.map(function(e) { return e.full_name; });
 
     for (var si = 0; si < this.fieldSections.length; si++) {
       var sec = this.fieldSections[si];
@@ -364,5 +366,7 @@ const LeadsPage = {
     catch (err) { showToast(err.message, 'error'); }
   },
 
-  init() {},
+  async init() {
+    try { var empRes = await API.get('/employees'); this.employees = empRes.employees || []; } catch (e) {}
+  },
 };
