@@ -21,8 +21,6 @@ def get_leads():
     status_filter = request.args.get('status', '')
 
     query = {}
-    if current_user['role'] == 'employee':
-        query['assigned_to'] = current_user['full_name']
     if search:
         query['$or'] = [
             {'name': {'$regex': search, '$options': 'i'}},
@@ -45,12 +43,10 @@ def get_leads():
                  .skip((page - 1) * limit)
                  .limit(limit))
 
-    employees = None
-    if current_user['role'] == 'admin':
-        employees = list(db.users.find(
-            {'role': 'employee', 'is_active': True},
-            {'full_name': 1}
-        ))
+    employees = list(db.users.find(
+        {'role': 'employee', 'is_active': True},
+        {'full_name': 1}
+    ))
 
     return jsonify({
         'leads': serialize_list(leads),
@@ -109,9 +105,6 @@ def update_lead(lead_id):
     lead = db.leads.find_one({'_id': ObjectId(lead_id)})
     if not lead:
         return jsonify({'error': 'Lead not found'}), 404
-
-    if current_user['role'] == 'employee' and lead.get('assigned_to') != current_user['full_name']:
-        return jsonify({'error': 'Not authorized to update this lead'}), 403
 
     exclude = {'lead_id', 'id', '_id', 'created_at', 'updated_at', 'created_by', 'contacted_count', 'last_contacted'}
     update = {k: v for k, v in data.items() if k not in exclude}

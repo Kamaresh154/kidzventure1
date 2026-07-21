@@ -23,14 +23,14 @@ const LeadsPage = {
 
       let html = '<div class="page-title">Leads</div>';
 
+      html += '<div class="action-bar">'
+        + '<button class="btn btn-primary btn-sm" onclick="LeadsPage.showForm()">+ Add Lead</button>';
       if (isAdmin) {
-        html += '<div class="action-bar">'
-          + '<button class="btn btn-primary btn-sm" onclick="LeadsPage.showForm()">+ Add Lead</button>'
-          + '<button class="btn btn-outline btn-sm" onclick="LeadsPage.showImport()">📥 Import</button>'
+        html += '<button class="btn btn-outline btn-sm" onclick="LeadsPage.showImport()">📥 Import</button>'
           + '<button class="btn btn-outline btn-sm" onclick="LeadsPage.exportExcel()">📤 Export</button>'
-          + '<button class="btn btn-danger btn-sm" onclick="LeadsPage.deleteAll()">🗑️ Delete All</button>'
-          + '</div>';
+          + '<button class="btn btn-danger btn-sm" onclick="LeadsPage.deleteAll()">🗑️ Delete All</button>';
       }
+      html += '</div>';
 
       html += '<div class="search-bar">'
         + '<input type="text" placeholder="Search leads..." id="lead-search"'
